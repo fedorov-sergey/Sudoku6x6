@@ -107,7 +107,6 @@ class Sudoku6x6 {
         }
     }
 
-    // Подсказка: ищем строку/столбец/блок где не хватает одного числа
     getHint(userBoard) {
         // Проверяем строки
         for (let r = 0; r < 6; r++) {
@@ -126,7 +125,7 @@ class Sudoku6x6 {
                     const c = empty[0];
                     return {
                         row: r, col: c, value: missing,
-                        text: `В ${r+1}-й строке заполнено 5 клеток. Найди число ${missing} в шестой ячейке`
+                        text: `В ${r+1}-й строке заполнено 5 клеток. Найди число в последней ячейке`
                     };
                 }
             }
@@ -149,7 +148,7 @@ class Sudoku6x6 {
                     const r = empty[0];
                     return {
                         row: r, col: c, value: missing,
-                        text: `В ${c+1}-м столбце заполнено 5 клеток. Найди число ${missing} в шестой ячейке`
+                        text: `В ${c+1}-м столбце заполнено 5 клеток. Найди число в последней ячейке`
                     };
                 }
             }
@@ -186,7 +185,7 @@ class Sudoku6x6 {
                         const blockIdx = br * 2 + bc;
                         return {
                             row, col, value: missing,
-                            text: `В ${blockNames[blockIdx]} прямоугольнике заполнено 5 клеток. Найди число ${missing} в шестой ячейке`
+                            text: `В ${blockNames[blockIdx]} прямоугольнике заполнено 5 клеток. Найди число в последней ячейке`
                         };
                     }
                 }
@@ -200,7 +199,7 @@ class Sudoku6x6 {
                     const correct = this.solution[r][c];
                     return {
                         row: r, col: c, value: correct,
-                        text: `Попробуй найти число ${correct} в ${r+1}-й строке и ${c+1}-м столбце`
+                        text: `Попробуй найти число в ${r+1}-й строке и ${c+1}-м столбце`
                     };
                 }
             }
@@ -220,12 +219,15 @@ class Sudoku6x6 {
 let game;
 let userBoard;
 let selectedCell = null;
+let highlightedNumber = null;
 
 function initBoard() {
     game = new Sudoku6x6();
     userBoard = game.board.map(row => [...row]);
     renderBoard();
     document.getElementById('hint').textContent = 'Нажми "Подсказка" для помощи';
+    highlightedNumber = null;
+    selectedCell = null;
 }
 
 function renderBoard() {
@@ -251,30 +253,79 @@ function renderBoard() {
             }
             
             cell.addEventListener('click', () => {
-                selectCell(r, c);
+                handleCellClick(r, c);
             });
             
             boardEl.appendChild(cell);
         }
     }
+    
+    // Если есть выделенное число — подсвечиваем
+    if (highlightedNumber !== null) {
+        highlightSameNumbers(highlightedNumber);
+    }
 }
 
-function selectCell(row, col) {
-    // Снимаем выделение с предыдущей
-    if (selectedCell) {
-        const prev = document.querySelector(`.cell[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
-        if (prev) prev.classList.remove('selected');
+function handleCellClick(row, col) {
+    const val = userBoard[row][col];
+    
+    // Если нажали на ячейку с числом
+    if (val !== 0) {
+        if (highlightedNumber === val) {
+            // Снимаем подсветку
+            highlightedNumber = null;
+            clearHighlights();
+        } else {
+            // Подсвечиваем все такие числа
+            highlightedNumber = val;
+            highlightSameNumbers(val);
+        }
+        // Снимаем выделение с ячейки
+        if (selectedCell) {
+            const prev = document.querySelector(`.cell[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
+            if (prev) prev.classList.remove('selected');
+            selectedCell = null;
+        }
+        return;
     }
     
+    // Если нажали на пустую ячейку
     if (!game.fixed[row][col]) {
+        // Снимаем подсветку чисел
+        highlightedNumber = null;
+        clearHighlights();
+        
+        // Снимаем выделение с предыдущей
+        if (selectedCell) {
+            const prev = document.querySelector(`.cell[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
+            if (prev) prev.classList.remove('selected');
+        }
+        
         const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
         if (cell) {
             cell.classList.add('selected');
             selectedCell = { row, col };
         }
     } else {
+        // Нажали на фиксированную пустую (такого быть не может)
         selectedCell = null;
     }
+}
+
+function highlightSameNumbers(num) {
+    clearHighlights();
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        if (parseInt(cell.textContent) === num) {
+            cell.classList.add('highlight-same');
+        }
+    });
+}
+
+function clearHighlights() {
+    document.querySelectorAll('.cell.highlight-same').forEach(cell => {
+        cell.classList.remove('highlight-same');
+    });
 }
 
 function setNumber(num) {
@@ -337,11 +388,23 @@ function getHint() {
             }, 4000);
         }
     });
+    
+    // Снимаем выделение с ячейки
+    if (selectedCell) {
+        const prev = document.querySelector(`.cell[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
+        if (prev) prev.classList.remove('selected');
+        selectedCell = null;
+    }
+    // Снимаем подсветку чисел
+    highlightedNumber = null;
+    clearHighlights();
 }
 
 function newGame() {
     initBoard();
     selectedCell = null;
+    highlightedNumber = null;
+    clearHighlights();
 }
 
 function checkSolution() {
