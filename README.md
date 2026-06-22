@@ -4,7 +4,7 @@
 
 ## 🌐 Демо
 
-**Ссылка на игру:** [https://fedorov-sergey.github.io/Sudoku6x6/](https://fedorov-sergey.github.io/Sudoku6x6/)
+**[Играть в Судоку 6×6](https://fedorov-sergey.github.io/Sudoku6x6/)**
 
 ## 🎮 Особенности
 
