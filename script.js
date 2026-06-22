@@ -2,8 +2,6 @@
 class Sudoku6x6 {
     constructor() {
         this.size = 6;
-        this.boxRows = 2;
-        this.boxCols = 3;
         this.board = [];
         this.solution = [];
         this.fixed = [];
@@ -11,12 +9,17 @@ class Sudoku6x6 {
     }
 
     generate() {
+        // Создаём пустую доску
         this.board = Array.from({ length: 6 }, () => Array(6).fill(0));
-        this.solution = Array.from({ length: 6 }, () => Array(6).fill(0));
         this.fixed = Array.from({ length: 6 }, () => Array(6).fill(false));
-
-        this.solveSudoku();
+        
+        // Заполняем доску правильным решением
+        this.solveSudoku(this.board);
+        
+        // Сохраняем решение
         this.solution = this.board.map(row => [...row]);
+        
+        // Удаляем часть чисел для создания головоломки
         this.removeNumbers(18);
     }
 
@@ -40,16 +43,18 @@ class Sudoku6x6 {
         return true;
     }
 
-    solveSudoku() {
+    solveSudoku(board) {
         for (let r = 0; r < 6; r++) {
             for (let c = 0; c < 6; c++) {
-                if (this.board[r][c] === 0) {
+                if (board[r][c] === 0) {
                     const nums = this.shuffle([1, 2, 3, 4, 5, 6]);
                     for (const num of nums) {
-                        if (this.isValid(this.board, r, c, num)) {
-                            this.board[r][c] = num;
-                            if (this.solveSudoku()) return true;
-                            this.board[r][c] = 0;
+                        if (this.isValid(board, r, c, num)) {
+                            board[r][c] = num;
+                            if (this.solveSudoku(board)) {
+                                return true;
+                            }
+                            board[r][c] = 0;
                         }
                     }
                     return false;
@@ -75,13 +80,33 @@ class Sudoku6x6 {
             }
         }
         this.shuffle(positions);
+        
         let removed = 0;
         for (const [r, c] of positions) {
             if (removed >= count) break;
+            // Проверяем, что после удаления решение всё ещё уникально
+            const backup = this.board[r][c];
             this.board[r][c] = 0;
-            this.fixed[r][c] = false;
-            removed++;
+            
+            // Проверяем, есть ли другое решение
+            const testBoard = this.board.map(row => [...row]);
+            let solutions = 0;
+            this.countSolutions(testBoard, 0, 0, 2, (count) => {
+                solutions = count;
+            });
+            
+            if (solutions === 1) {
+                // Удаляем число
+                this.fixed[r][c] = false;
+                removed++;
+            } else {
+                // Возвращаем число
+                this.board[r][c] = backup;
+                this.fixed[r][c] = true;
+            }
         }
+        
+        // Помечаем оставшиеся числа как фиксированные
         for (let r = 0; r < 6; r++) {
             for (let c = 0; c < 6; c++) {
                 if (this.board[r][c] !== 0) {
@@ -89,6 +114,41 @@ class Sudoku6x6 {
                 }
             }
         }
+    }
+
+    countSolutions(board, row, col, maxCount, callback) {
+        let count = 0;
+        const solve = (b, r, c) => {
+            if (count >= maxCount) return;
+            
+            if (r === 6) {
+                count++;
+                return;
+            }
+            
+            const nextR = c === 5 ? r + 1 : r;
+            const nextC = c === 5 ? 0 : c + 1;
+            
+            if (b[r][c] !== 0) {
+                solve(b, nextR, nextC);
+                return;
+            }
+            
+            for (let num = 1; num <= 6; num++) {
+                if (this.isValid(b, r, c, num)) {
+                    b[r][c] = num;
+                    solve(b, nextR, nextC);
+                    if (count >= maxCount) {
+                        b[r][c] = 0;
+                        return;
+                    }
+                    b[r][c] = 0;
+                }
+            }
+        };
+        
+        solve(board, 0, 0);
+        callback(count);
     }
 
     getHint(userBoard) {
