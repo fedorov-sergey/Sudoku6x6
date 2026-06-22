@@ -35,19 +35,20 @@ h1 {
 #board {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 3px;
-    background: #2a2a4a;
+    gap: 2px;
+    background: #1a1a3a;
     padding: 8px;
     border-radius: 16px;
     margin: 0 auto 20px;
     max-width: 420px;
-    border: 3px solid #4a4a8a;
+    border: 4px solid #4a4a8a;
+    position: relative;
 }
 
+/* Визуальное деление на прямоугольники 2×3 */
 .cell {
     aspect-ratio: 1;
     background: #1e1e3a;
-    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -56,8 +57,39 @@ h1 {
     color: #d0d0ff;
     cursor: pointer;
     transition: all 0.2s;
-    border: 1px solid #3a3a6a;
     user-select: none;
+    position: relative;
+}
+
+/* Границы прямоугольников 2×3 */
+.cell:nth-child(6n+4) {
+    border-left: 3px solid #6a6aaa;
+}
+.cell:nth-child(6n+1) {
+    border-left: none;
+}
+
+.cell:nth-child(n+13):nth-child(-n+18) {
+    border-top: 3px solid #6a6aaa;
+}
+.cell:nth-child(n+25):nth-child(-n+30) {
+    border-top: 3px solid #6a6aaa;
+}
+.cell:nth-child(n+37):nth-child(-n+42) {
+    border-top: 3px solid #6a6aaa;
+}
+
+/* Первые 6 ячеек не имеют верхней границы блока */
+.cell:nth-child(-n+6) {
+    border-top: none;
+}
+
+/* Каждая 4-я ячейка в ряду — граница блока */
+.cell:nth-child(6n+3) {
+    border-right: 3px solid #6a6aaa;
+}
+.cell:nth-child(6n) {
+    border-right: none;
 }
 
 .cell.fixed {
@@ -80,10 +112,7 @@ h1 {
     outline: 3px solid #ffdd88;
     outline-offset: -2px;
     background: #2a2a5a;
-}
-
-.cell.highlight {
-    background: #3a3a6a;
+    z-index: 2;
 }
 
 .cell.hint-highlight {
@@ -91,11 +120,24 @@ h1 {
     color: #88ff88 !important;
     transform: scale(1.1);
     box-shadow: 0 0 20px rgba(100,255,100,0.4);
+    z-index: 3;
 }
 
 .cell.wrong {
     background: #7a3a3a !important;
     color: #ff8888 !important;
+}
+
+.cell.hint-target {
+    outline: 3px solid #ffaa44;
+    outline-offset: -2px;
+    background: #3a3a5a !important;
+    animation: pulse-border 1s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% { outline-color: #ffaa44; }
+    50% { outline-color: #ff6600; }
 }
 
 .hint-box {
@@ -110,6 +152,52 @@ h1 {
     text-align: left;
     max-width: 400px;
     transition: all 0.3s;
+    line-height: 1.6;
+}
+
+.number-pad {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.num-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 2px solid #4a4a7a;
+    background: #2a2a4a;
+    color: #d0d0ff;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.num-btn:hover {
+    background: #4a4a7a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.num-btn:active {
+    transform: translateY(0);
+}
+
+.num-btn.erase-btn {
+    background: #4a2a2a;
+    border-color: #7a4a4a;
+    color: #ff8888;
+    font-size: 18px;
+}
+
+.num-btn.erase-btn:hover {
+    background: #6a3a3a;
 }
 
 .buttons {
@@ -158,4 +246,5 @@ button:nth-child(3) {
     .cell { font-size: 20px; }
     .hint-box { font-size: 15px; padding: 10px 14px; }
     button { padding: 10px 16px; font-size: 14px; min-width: 90px; }
+    .num-btn { width: 40px; height: 40px; font-size: 18px; }
 }
