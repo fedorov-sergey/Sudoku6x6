@@ -272,6 +272,7 @@ function initBoard() {
     document.getElementById('hint').textContent = 'Нажми "Подсказка" для помощи';
     highlightedNumber = null;
     selectedCell = null;
+    clearHighlights();
 }
 
 function renderBoard() {
