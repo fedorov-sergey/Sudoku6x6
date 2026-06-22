@@ -15,45 +15,21 @@ class Sudoku6x6 {
         this.solution = Array.from({ length: 6 }, () => Array(6).fill(0));
         this.fixed = Array.from({ length: 6 }, () => Array(6).fill(false));
 
-        this.fillDiagonalBlocks();
         this.solveSudoku();
         this.solution = this.board.map(row => [...row]);
         this.removeNumbers(18);
     }
 
-    fillDiagonalBlocks() {
-        for (let r = 0; r < 6; r += 2) {
-            for (let c = 0; c < 6; c += 3) {
-                this.fillBlock(r, c);
-            }
-        }
-    }
-
-    fillBlock(row, col) {
-        const nums = this.shuffle([1, 2, 3, 4, 5, 6]);
-        let idx = 0;
-        for (let r = row; r < row + 2; r++) {
-            for (let c = col; c < col + 3; c++) {
-                this.board[r][c] = nums[idx++];
-            }
-        }
-    }
-
-    shuffle(arr) {
-        for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-        }
-        return arr;
-    }
-
     isValid(board, row, col, num) {
+        // Проверка строки
         for (let c = 0; c < 6; c++) {
             if (board[row][c] === num) return false;
         }
+        // Проверка столбца
         for (let r = 0; r < 6; r++) {
             if (board[r][col] === num) return false;
         }
+        // Проверка блока 2×3
         const startRow = Math.floor(row / 2) * 2;
         const startCol = Math.floor(col / 3) * 3;
         for (let r = startRow; r < startRow + 2; r++) {
@@ -81,6 +57,14 @@ class Sudoku6x6 {
             }
         }
         return true;
+    }
+
+    shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
     }
 
     removeNumbers(count) {
@@ -260,7 +244,6 @@ function renderBoard() {
         }
     }
     
-    // Если есть выделенное число — подсвечиваем
     if (highlightedNumber !== null) {
         highlightSameNumbers(highlightedNumber);
     }
@@ -269,18 +252,14 @@ function renderBoard() {
 function handleCellClick(row, col) {
     const val = userBoard[row][col];
     
-    // Если нажали на ячейку с числом
     if (val !== 0) {
         if (highlightedNumber === val) {
-            // Снимаем подсветку
             highlightedNumber = null;
             clearHighlights();
         } else {
-            // Подсвечиваем все такие числа
             highlightedNumber = val;
             highlightSameNumbers(val);
         }
-        // Снимаем выделение с ячейки
         if (selectedCell) {
             const prev = document.querySelector(`.cell[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
             if (prev) prev.classList.remove('selected');
@@ -289,13 +268,10 @@ function handleCellClick(row, col) {
         return;
     }
     
-    // Если нажали на пустую ячейку
     if (!game.fixed[row][col]) {
-        // Снимаем подсветку чисел
         highlightedNumber = null;
         clearHighlights();
         
-        // Снимаем выделение с предыдущей
         if (selectedCell) {
             const prev = document.querySelector(`.cell[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
             if (prev) prev.classList.remove('selected');
@@ -307,7 +283,6 @@ function handleCellClick(row, col) {
             selectedCell = { row, col };
         }
     } else {
-        // Нажали на фиксированную пустую (такого быть не может)
         selectedCell = null;
     }
 }
@@ -339,12 +314,10 @@ function setNumber(num) {
         userBoard[row][col] = num;
     }
     renderBoard();
-    // Восстанавливаем выделение
     const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
     if (cell) cell.classList.add('selected');
 }
 
-// Обработка ввода с клавиатуры
 document.addEventListener('keydown', (e) => {
     if (!selectedCell) return;
     const { row, col } = selectedCell;
@@ -358,7 +331,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Обработка кликов по кнопкам цифр
 document.querySelectorAll('.num-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const num = parseInt(btn.dataset.num);
@@ -375,7 +347,6 @@ function getHint() {
     
     document.getElementById('hint').textContent = hint.text;
     
-    // Подсвечиваем целевую ячейку
     const cells = document.querySelectorAll('.cell');
     cells.forEach(cell => {
         cell.classList.remove('hint-highlight', 'hint-target');
@@ -389,13 +360,11 @@ function getHint() {
         }
     });
     
-    // Снимаем выделение с ячейки
     if (selectedCell) {
         const prev = document.querySelector(`.cell[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
         if (prev) prev.classList.remove('selected');
         selectedCell = null;
     }
-    // Снимаем подсветку чисел
     highlightedNumber = null;
     clearHighlights();
 }
@@ -429,5 +398,4 @@ function checkSolution() {
     }
 }
 
-// Запуск
 initBoard();
