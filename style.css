@@ -186,13 +186,19 @@ h1 {
     line-height: 1.6;
 }
 
+.number-pad-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 0 auto 18px;
+}
+
 .number-pad {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     max-width: 280px;
     width: 100%;
-    margin: 0 auto 18px;
 }
 
 .num-btn {
