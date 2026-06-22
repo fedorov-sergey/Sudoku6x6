@@ -169,7 +169,7 @@ class Sudoku6x6 {
                     const c = empty[0];
                     return {
                         row: r, col: c, value: missing,
-                        text: `В ${r+1}-й строке заполнено 5 клеток. Найди число в последней ячейке`
+                        text: `В ${r+1}-й строке заполнено 5 клеток. Найди последнее число`
                     };
                 }
             }
@@ -192,7 +192,7 @@ class Sudoku6x6 {
                     const r = empty[0];
                     return {
                         row: r, col: c, value: missing,
-                        text: `В ${c+1}-м столбце заполнено 5 клеток. Найди число в последней ячейке`
+                        text: `В ${c+1}-м столбце заполнено 5 клеток. Найди последнее число`
                     };
                 }
             }
@@ -229,7 +229,7 @@ class Sudoku6x6 {
                         const blockIdx = br * 2 + bc;
                         return {
                             row, col, value: missing,
-                            text: `В ${blockNames[blockIdx]} прямоугольнике заполнено 5 клеток. Найди число в последней ячейке`
+                            text: `В ${blockNames[blockIdx]} прямоугольнике заполнено 5 клеток. Найди последнее число`
                         };
                     }
                 }
