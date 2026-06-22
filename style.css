@@ -45,7 +45,6 @@ h1 {
     position: relative;
 }
 
-/* Визуальное деление на прямоугольники 2×3 */
 .cell {
     aspect-ratio: 1;
     background: #1e1e3a;
@@ -56,40 +55,55 @@ h1 {
     font-weight: 600;
     color: #d0d0ff;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s ease;
     user-select: none;
     position: relative;
+    z-index: 1;
 }
 
-/* Границы прямоугольников 2×3 */
-.cell:nth-child(6n+4) {
-    border-left: 3px solid #6a6aaa;
-}
-.cell:nth-child(6n+1) {
-    border-left: none;
-}
-
-.cell:nth-child(n+13):nth-child(-n+18) {
-    border-top: 3px solid #6a6aaa;
-}
-.cell:nth-child(n+25):nth-child(-n+30) {
-    border-top: 3px solid #6a6aaa;
-}
-.cell:nth-child(n+37):nth-child(-n+42) {
-    border-top: 3px solid #6a6aaa;
+/* Границы прямоугольников 2×3 - используем псевдоэлементы */
+.cell::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
 }
 
-/* Первые 6 ячеек не имеют верхней границы блока */
-.cell:nth-child(-n+6) {
-    border-top: none;
+/* Вертикальные границы блоков */
+.cell:nth-child(6n+3)::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #6a6aaa;
+    pointer-events: none;
+    z-index: 5;
 }
 
-/* Каждая 4-я ячейка в ряду — граница блока */
-.cell:nth-child(6n+3) {
-    border-right: 3px solid #6a6aaa;
+/* Горизонтальные границы блоков */
+.cell:nth-child(n+13):nth-child(-n+18)::before,
+.cell:nth-child(n+25):nth-child(-n+30)::before,
+.cell:nth-child(n+37):nth-child(-n+42)::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #6a6aaa;
+    pointer-events: none;
+    z-index: 5;
 }
-.cell:nth-child(6n) {
-    border-right: none;
+
+/* Первые 6 ячеек не имеют верхней границы */
+.cell:nth-child(-n+6)::before {
+    display: none;
 }
 
 .cell.fixed {
@@ -106,13 +120,24 @@ h1 {
 .cell.editable:hover {
     background: #2a2a5a;
     transform: scale(1.05);
+    z-index: 10;
 }
 
 .cell.selected {
     outline: 3px solid #ffdd88;
     outline-offset: -2px;
     background: #2a2a5a;
+    z-index: 10;
+}
+
+/* Подсветка одинаковых чисел */
+.cell.highlight-same {
+    background: #3a3a6a;
     z-index: 2;
+}
+
+.cell.highlight-same.fixed {
+    background: #3a3a6a;
 }
 
 .cell.hint-highlight {
@@ -120,12 +145,7 @@ h1 {
     color: #88ff88 !important;
     transform: scale(1.1);
     box-shadow: 0 0 20px rgba(100,255,100,0.4);
-    z-index: 3;
-}
-
-.cell.wrong {
-    background: #7a3a3a !important;
-    color: #ff8888 !important;
+    z-index: 15 !important;
 }
 
 .cell.hint-target {
@@ -133,11 +153,18 @@ h1 {
     outline-offset: -2px;
     background: #3a3a5a !important;
     animation: pulse-border 1s ease-in-out infinite;
+    z-index: 15 !important;
 }
 
 @keyframes pulse-border {
     0%, 100% { outline-color: #ffaa44; }
     50% { outline-color: #ff6600; }
+}
+
+.cell.wrong {
+    background: #7a3a3a !important;
+    color: #ff8888 !important;
+    z-index: 10;
 }
 
 .hint-box {
@@ -156,21 +183,21 @@ h1 {
 }
 
 .number-pad {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
-    justify-content: center;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
+    max-width: 280px;
+    margin: 0 auto 18px;
 }
 
 .num-btn {
-    width: 48px;
+    width: 100%;
     height: 48px;
     border-radius: 12px;
     border: 2px solid #4a4a7a;
     background: #2a2a4a;
     color: #d0d0ff;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -194,10 +221,7 @@ h1 {
     border-color: #7a4a4a;
     color: #ff8888;
     font-size: 18px;
-}
-
-.num-btn.erase-btn:hover {
-    background: #6a3a3a;
+    grid-column: span 1;
 }
 
 .buttons {
@@ -246,5 +270,6 @@ button:nth-child(3) {
     .cell { font-size: 20px; }
     .hint-box { font-size: 15px; padding: 10px 14px; }
     button { padding: 10px 16px; font-size: 14px; min-width: 90px; }
-    .num-btn { width: 40px; height: 40px; font-size: 18px; }
+    .num-btn { height: 42px; font-size: 17px; }
+    .number-pad { max-width: 200px; }
 }
