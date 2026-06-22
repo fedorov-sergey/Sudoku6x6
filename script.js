@@ -1,6 +1,4 @@
 // ====== Генератор судоку 6×6 ======
-// Блоки: 2 строки × 3 столбца (каждый блок 2×3)
-
 class Sudoku6x6 {
     constructor() {
         this.size = 6;
@@ -13,24 +11,17 @@ class Sudoku6x6 {
     }
 
     generate() {
-        // Создаём пустую доску
         this.board = Array.from({ length: 6 }, () => Array(6).fill(0));
         this.solution = Array.from({ length: 6 }, () => Array(6).fill(0));
         this.fixed = Array.from({ length: 6 }, () => Array(6).fill(false));
 
-        // Заполняем диагональные блоки (они независимы)
         this.fillDiagonalBlocks();
-        // Решаем остальное
         this.solveSudoku();
-        // Копируем решение
         this.solution = this.board.map(row => [...row]);
-
-        // Удаляем часть чисел для создания головоломки
-        this.removeNumbers(18); // оставляем ~18 подсказок
+        this.removeNumbers(18);
     }
 
     fillDiagonalBlocks() {
-        // Блоки по диагонали: (0,0), (0,3), (2,0), (2,3), (4,0), (4,3)
         for (let r = 0; r < 6; r += 2) {
             for (let c = 0; c < 6; c += 3) {
                 this.fillBlock(r, c);
@@ -57,15 +48,12 @@ class Sudoku6x6 {
     }
 
     isValid(board, row, col, num) {
-        // Проверка строки
         for (let c = 0; c < 6; c++) {
             if (board[row][c] === num) return false;
         }
-        // Проверка столбца
         for (let r = 0; r < 6; r++) {
             if (board[r][col] === num) return false;
         }
-        // Проверка блока 2×3
         const startRow = Math.floor(row / 2) * 2;
         const startCol = Math.floor(col / 3) * 3;
         for (let r = startRow; r < startRow + 2; r++) {
@@ -110,7 +98,6 @@ class Sudoku6x6 {
             this.fixed[r][c] = false;
             removed++;
         }
-        // Помечаем оставшиеся как фиксированные
         for (let r = 0; r < 6; r++) {
             for (let c = 0; c < 6; c++) {
                 if (this.board[r][c] !== 0) {
@@ -120,42 +107,112 @@ class Sudoku6x6 {
         }
     }
 
-    // Получить подсказку (находит пустую ячейку и возвращает описание)
+    // Подсказка: ищем строку/столбец/блок где не хватает одного числа
     getHint(userBoard) {
-        // Находим первую пустую ячейку
+        // Проверяем строки
         for (let r = 0; r < 6; r++) {
+            const empty = [];
+            const present = new Set();
             for (let c = 0; c < 6; c++) {
-                if (userBoard[r][c] === 0 || userBoard[r][c] !== this.solution[r][c]) {
-                    const correctNum = this.solution[r][c];
-                    // Генерируем разные типы подсказок
-                    const hintType = Math.floor(Math.random() * 4);
-                    let hintText = '';
-                    const rowNum = r + 1;
-                    const colNum = c + 1;
-                    const blockRow = Math.floor(r / 2) + 1;
-                    const blockCol = Math.floor(c / 3) + 1;
-                    const blockNames = ['левом верхнем', 'правом верхнем', 'левом среднем', 'правом среднем', 'левом нижнем', 'правом нижнем'];
-                    const blockIdx = (blockRow - 1) * 2 + (blockCol - 1);
-                    
-                    switch(hintType) {
-                        case 0:
-                            hintText = `🔍 Найди число ${correctNum} в ${rowNum}-й строке`;
-                            break;
-                        case 1:
-                            hintText = `🔍 Найди число ${correctNum} в ${colNum}-м столбце`;
-                            break;
-                        case 2:
-                            hintText = `🔍 Найди число ${correctNum} в ${blockNames[blockIdx]} прямоугольнике`;
-                            break;
-                        case 3:
-                            hintText = `🔍 В ${rowNum}-й строке, ${colNum}-м столбце должно быть число ${correctNum}`;
-                            break;
-                    }
-                    return { row: r, col: c, value: correctNum, text: hintText };
+                if (userBoard[r][c] === 0) {
+                    empty.push(c);
+                } else {
+                    present.add(userBoard[r][c]);
+                }
+            }
+            if (empty.length === 1) {
+                const missing = this.findMissing(present);
+                if (missing) {
+                    const c = empty[0];
+                    return {
+                        row: r, col: c, value: missing,
+                        text: `В ${r+1}-й строке заполнено 5 клеток. Найди число ${missing} в шестой ячейке`
+                    };
                 }
             }
         }
-        return null; // всё решено
+
+        // Проверяем столбцы
+        for (let c = 0; c < 6; c++) {
+            const empty = [];
+            const present = new Set();
+            for (let r = 0; r < 6; r++) {
+                if (userBoard[r][c] === 0) {
+                    empty.push(r);
+                } else {
+                    present.add(userBoard[r][c]);
+                }
+            }
+            if (empty.length === 1) {
+                const missing = this.findMissing(present);
+                if (missing) {
+                    const r = empty[0];
+                    return {
+                        row: r, col: c, value: missing,
+                        text: `В ${c+1}-м столбце заполнено 5 клеток. Найди число ${missing} в шестой ячейке`
+                    };
+                }
+            }
+        }
+
+        // Проверяем прямоугольники 2×3
+        const blockNames = [
+            'левом верхнем', 'правом верхнем',
+            'левом среднем', 'правом среднем',
+            'левом нижнем', 'правом нижнем'
+        ];
+        
+        for (let br = 0; br < 3; br++) {
+            for (let bc = 0; bc < 2; bc++) {
+                const empty = [];
+                const present = new Set();
+                const startRow = br * 2;
+                const startCol = bc * 3;
+                
+                for (let r = startRow; r < startRow + 2; r++) {
+                    for (let c = startCol; c < startCol + 3; c++) {
+                        if (userBoard[r][c] === 0) {
+                            empty.push({ row: r, col: c });
+                        } else {
+                            present.add(userBoard[r][c]);
+                        }
+                    }
+                }
+                
+                if (empty.length === 1) {
+                    const missing = this.findMissing(present);
+                    if (missing) {
+                        const { row, col } = empty[0];
+                        const blockIdx = br * 2 + bc;
+                        return {
+                            row, col, value: missing,
+                            text: `В ${blockNames[blockIdx]} прямоугольнике заполнено 5 клеток. Найди число ${missing} в шестой ячейке`
+                        };
+                    }
+                }
+            }
+        }
+
+        // Если нет лёгких подсказок — ищем любую пустую ячейку
+        for (let r = 0; r < 6; r++) {
+            for (let c = 0; c < 6; c++) {
+                if (userBoard[r][c] === 0) {
+                    const correct = this.solution[r][c];
+                    return {
+                        row: r, col: c, value: correct,
+                        text: `Попробуй найти число ${correct} в ${r+1}-й строке и ${c+1}-м столбце`
+                    };
+                }
+            }
+        }
+        return null;
+    }
+
+    findMissing(present) {
+        for (let n = 1; n <= 6; n++) {
+            if (!present.has(n)) return n;
+        }
+        return null;
     }
 }
 
@@ -163,14 +220,12 @@ class Sudoku6x6 {
 let game;
 let userBoard;
 let selectedCell = null;
-let hintActive = false;
 
 function initBoard() {
     game = new Sudoku6x6();
     userBoard = game.board.map(row => [...row]);
     renderBoard();
-    document.getElementById('hint').textContent = '💡 Нажми "Подсказка" для помощи';
-    hintActive = false;
+    document.getElementById('hint').textContent = 'Нажми "Подсказка" для помощи';
 }
 
 function renderBoard() {
@@ -195,23 +250,47 @@ function renderBoard() {
                 cell.classList.add('editable');
             }
             
-            // Обработка клика для ввода чисел
             cell.addEventListener('click', () => {
-                if (selectedCell) {
-                    const prev = document.querySelector(`.cell[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
-                    if (prev) prev.classList.remove('selected');
-                }
-                if (!game.fixed[r][c] && userBoard[r][c] === 0) {
-                    cell.classList.add('selected');
-                    selectedCell = { row: r, col: c };
-                } else {
-                    selectedCell = null;
-                }
+                selectCell(r, c);
             });
             
             boardEl.appendChild(cell);
         }
     }
+}
+
+function selectCell(row, col) {
+    // Снимаем выделение с предыдущей
+    if (selectedCell) {
+        const prev = document.querySelector(`.cell[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`);
+        if (prev) prev.classList.remove('selected');
+    }
+    
+    if (!game.fixed[row][col]) {
+        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+        if (cell) {
+            cell.classList.add('selected');
+            selectedCell = { row, col };
+        }
+    } else {
+        selectedCell = null;
+    }
+}
+
+function setNumber(num) {
+    if (!selectedCell) return;
+    const { row, col } = selectedCell;
+    if (game.fixed[row][col]) return;
+    
+    if (num === 0) {
+        userBoard[row][col] = 0;
+    } else {
+        userBoard[row][col] = num;
+    }
+    renderBoard();
+    // Восстанавливаем выделение
+    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+    if (cell) cell.classList.add('selected');
 }
 
 // Обработка ввода с клавиатуры
@@ -222,48 +301,47 @@ document.addEventListener('keydown', (e) => {
     
     const num = parseInt(e.key);
     if (num >= 1 && num <= 6) {
-        userBoard[row][col] = num;
-        renderBoard();
-        // Выделяем снова
-        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-        if (cell) cell.classList.add('selected');
+        setNumber(num);
     } else if (e.key === 'Backspace' || e.key === 'Delete') {
-        userBoard[row][col] = 0;
-        renderBoard();
-        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-        if (cell) cell.classList.add('selected');
+        setNumber(0);
     }
+});
+
+// Обработка кликов по кнопкам цифр
+document.querySelectorAll('.num-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const num = parseInt(btn.dataset.num);
+        setNumber(num);
+    });
 });
 
 function getHint() {
     const hint = game.getHint(userBoard);
     if (!hint) {
-        document.getElementById('hint').textContent = '🎉 Поздравляю! Ты решил всё!';
+        document.getElementById('hint').textContent = 'Поздравляю! Ты решил всё!';
         return;
     }
     
-    // Показываем подсказку
     document.getElementById('hint').textContent = hint.text;
     
-    // Визуально подсвечиваем ячейку
+    // Подсвечиваем целевую ячейку
     const cells = document.querySelectorAll('.cell');
     cells.forEach(cell => {
-        cell.classList.remove('hint-highlight');
+        cell.classList.remove('hint-highlight', 'hint-target');
         const r = parseInt(cell.dataset.row);
         const c = parseInt(cell.dataset.col);
         if (r === hint.row && c === hint.col) {
-            cell.classList.add('hint-highlight');
-            setTimeout(() => cell.classList.remove('hint-highlight'), 3000);
+            cell.classList.add('hint-highlight', 'hint-target');
+            setTimeout(() => {
+                cell.classList.remove('hint-highlight', 'hint-target');
+            }, 4000);
         }
     });
-    
-    // Автоматически ставим число (можно закомментировать, если хотите, чтобы пользователь сам вводил)
-    // userBoard[hint.row][hint.col] = hint.value;
-    // renderBoard();
 }
 
 function newGame() {
     initBoard();
+    selectedCell = null;
 }
 
 function checkSolution() {
@@ -282,9 +360,9 @@ function checkSolution() {
     });
     
     if (correct) {
-        document.getElementById('hint').textContent = '🎉 Всё правильно! Ты гений!';
+        document.getElementById('hint').textContent = 'Всё правильно! Ты гений!';
     } else {
-        document.getElementById('hint').textContent = '❌ Есть ошибки. Красным выделены неверные числа.';
+        document.getElementById('hint').textContent = 'Есть ошибки. Красным выделены неверные числа.';
     }
 }
 
