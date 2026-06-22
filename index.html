@@ -8,13 +8,24 @@
 </head>
 <body>
     <div class="container">
-        <h1>🧩 Судоку 6×6</h1>
+        <h1>Судоку 6×6</h1>
         <div id="board"></div>
-        <div id="hint" class="hint-box">💡 Нажми "Подсказка"</div>
+        <div id="hint" class="hint-box">Нажми "Подсказка" для помощи</div>
+        
+        <div class="number-pad">
+            <button class="num-btn" data-num="1">1</button>
+            <button class="num-btn" data-num="2">2</button>
+            <button class="num-btn" data-num="3">3</button>
+            <button class="num-btn" data-num="4">4</button>
+            <button class="num-btn" data-num="5">5</button>
+            <button class="num-btn" data-num="6">6</button>
+            <button class="num-btn erase-btn" data-num="0">✕</button>
+        </div>
+        
         <div class="buttons">
-            <button onclick="getHint()">💡 Подсказка</button>
-            <button onclick="newGame()">🔄 Новая игра</button>
-            <button onclick="checkSolution()">✅ Проверить</button>
+            <button onclick="getHint()">Подсказка</button>
+            <button onclick="newGame()">Новая игра</button>
+            <button onclick="checkSolution()">Проверить</button>
         </div>
     </div>
     <script src="script.js"></script>
